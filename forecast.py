@@ -1,48 +1,8 @@
-
-class Slice():
-
-    def __init__(self, date, time, temp, tempUnit, preferredUnit, windSpeed, windDirection, prob, shortProse):
-        self.date = date
-        self.time = time
-
-
-        self.tempF = None
-        self.tempC = None
-        self.preferredUnit = preferredUnit
-        if tempUnit == "F":
-            self.tempF = float(temp)
-            self.tempC = float((temp - 32) * (5/9))
-        else:
-            self.tempF = float(temp * (9/5) + 32)
-            self.tempC = float(temp)
-
-        self.windSpeed = windSpeed
-        self.windDirection = windDirection
-        self.prob = prob
-        self.shortProse = shortProse
-
-    def __str__(self):
-
-        temp = None
-        if self.preferredUnit == "F":
-            temp = self.tempF
-        else:
-            temp = self.tempC
-
-        degree_sym = "\u00B0"
-
-        s = f"""
-{self.date}, {self.time}:
-Temperature:      {temp:.1f}{degree_sym}{self.preferredUnit}
-Precipitation %:  {self.prob}%
-Windspeed:        {self.windSpeed} {self.windDirection}"""
-
-        return s
-
-
 class Forecast():
 
-    def __init__(self, location, json, preferredUnit):
+    def __init__(self, location, json, preferredUnit, verbose=False):
+
+        self.verbose = verbose
         self.location = location
         self.raw = json
         self.preferredUnit = preferredUnit
@@ -76,8 +36,43 @@ class Forecast():
             # Short description in english prose
             shortProse = period["shortForecast"]
 
-            obj = Slice(startDate, startTime, temp, tempUnit, self.preferredUnit, windSpeed, windDirection, prob, shortProse)
+            obj = {
+                "startDate": startDate,
+                "startTime": startTime,
+                "temp": temp,
+                "tempUnit": tempUnit,
+                "windSpeed": windSpeed,
+                "windDirection": windDirection,
+                "prob": prob,
+                "shortProse": shortProse 
+            }
 
             self.time_slices.append(obj)
 
-   
+    def print_slice(self, slice_num):
+
+        slice = self.time_slices[slice_num]
+
+        # Determine what unit to print
+        temp = None
+
+        if self.preferredUnit == "F":
+            temp = slice["temp"]
+        else:
+            temp = (slice["temp"] - 32) * (5/9)
+
+        # Unicode for degree symbol
+        degree_sym = "\u00B0"
+
+        s = None
+
+        if self.verbose:
+            s = "Verbosity not yet implemented"
+        else:
+            s = f"""
+{slice["startDate"]}, {slice["startTime"]}:
+Temperature:      {temp:.1f}{degree_sym}{self.preferredUnit}
+Precipitation %:  {slice["prob"]}%
+Windspeed:        {slice["windSpeed"]} {slice["windDirection"]}"""
+
+        print(s)
