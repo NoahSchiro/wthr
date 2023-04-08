@@ -1,8 +1,9 @@
 class Forecast():
 
-    def __init__(self, location, json, preferredUnit, verbose=False):
+    def __init__(self, location, json, preferredUnit, args):
 
-        self.verbose = verbose
+        self.verbose = args.verbose
+        self.forecast = args.forecast
         self.location = location
         self.raw = json
         self.preferredUnit = preferredUnit
@@ -49,30 +50,75 @@ class Forecast():
 
             self.time_slices.append(obj)
 
-    def print_slice(self, slice_num):
-
-        slice = self.time_slices[slice_num]
-
-        # Determine what unit to print
-        temp = None
+    def _get_temp(self, temp_value):
 
         if self.preferredUnit == "F":
-            temp = slice["temp"]
+            return temp_value
         else:
-            temp = (slice["temp"] - 32) * (5/9)
+            return (temp_value - 32) * (5/9)
+        
+    def _get_direction(self, direction):
+
+        if direction == "N":
+            return "\u2191"
+        elif direction == "NE":
+            return "\u2197"
+        elif direction == "E":
+            return "\u2192"
+        elif direction == "SE":
+            return "\u2198"
+        elif direction == "S":
+            return "\u2193"
+        elif direction == "SW":
+            return "\u2199"
+        elif direction == "W":
+            return "\u2190"
+        elif direction == "NW":
+            return "\u2196"
+        else:
+            print(f"Error! Unrecognized direction {direction}")
+            
+    def print_slice(self):
 
         # Unicode for degree symbol
         degree_sym = "\u00B0"
 
-        s = None
-
+        # Print verbose information about the weather
         if self.verbose:
             s = "Verbosity not yet implemented"
+
+        # Print information about the future
+        elif self.forecast:
+
+            for i in range(12):
+
+                # Get slice
+                slice = self.time_slices[i]
+
+                # Determine temp
+                temp = self._get_temp(slice["temp"])
+
+                s = f"""
+{slice["startDate"]}, {slice["startTime"]}:
+    Temperature:      {temp:.1f}{degree_sym}{self.preferredUnit}
+    Precipitation %:  {slice["prob"]}%
+    Windspeed:        {slice["windSpeed"]} {self._get_direction(slice["windDirection"])}"""
+
+                print(s)
+
+        # Default case
         else:
+
+            # Get the most current slice
+            slice = self.time_slices[0]
+
+            # Determine what unit to print
+            temp = self._get_temp(slice["temp"])
+
             s = f"""
 {slice["startDate"]}, {slice["startTime"]}:
-Temperature:      {temp:.1f}{degree_sym}{self.preferredUnit}
-Precipitation %:  {slice["prob"]}%
-Windspeed:        {slice["windSpeed"]} {slice["windDirection"]}"""
+    Temperature:      {temp:.1f}{degree_sym}{self.preferredUnit}
+    Precipitation %:  {slice["prob"]}%
+    Windspeed:        {slice["windSpeed"]} {self._get_direction(slice["windDirection"])}"""
 
-        print(s)
+            print(s)
