@@ -19,14 +19,36 @@ def pretty(j):
 ##########################################################
 
 def main(args):
-    
+
+    # Load in configurations
+    config = json.load(open("config.json"))
+    preferredSystem = config["preferredSystem"]
+
+    lat, lon = None, None
+    address = None
+
     # Get location
     # TODO: Handle the case where there is no internet connection
     g = geocoder.ip('me')
 
-    # Break this down into latitude and longitude
-    lat,lon = g.latlng
+    if args.location != None:
+        query = config["locations"][args.location]
+        lat, lon = query["lat"], query["lon"]
+        address = query["address"]
+    else:
+        lat,lon = g.latlng
+        address = g.address
 
+    if args.save:
+        locationName = g.city.replace(" ", "")
+        config["locations"][locationName] = {}
+
+        config["locations"][locationName]["address"] = address
+        config["locations"][locationName]["lat"] = lat
+        config["locations"][locationName]["lon"] = lon
+        json.dump(config, open("config.json", "w"), indent=4)
+
+    
     # First request is going to determine what weather station we need to query
     # TODO: Handle the case where there is no internet connection
     location_query_url = f"https://api.weather.gov/points/{lat},{lon}"
@@ -41,11 +63,11 @@ def main(args):
     response_json2 = decode(r2)
 
     # Store all of our data in a nice way
-    forecast = Forecast(g.address, response_json2, "C", args)
+    forecast = Forecast(address, response_json2, preferredSystem, args)
 
     # Show data
     # TODO: Maybe add color and some other cool TUI effects
-    print(g.address)
+    print(address)
     forecast.print_slice()
 
 # Entry point
@@ -55,11 +77,10 @@ if __name__=="__main__":
         prog="wthr",
         description="A minimal, cross-platform weather CLI tool",
     )
-
-    # Display more information
-    parser.add_argument("-v", "--verbose",
+   
+    parser.add_argument("-s", "--save",
         action="store_true",
-        help="Decide how much detail you want")
+        help="Save your current location to a config file for future lookup")
 
     # Specify a location other than your current location
     parser.add_argument("-l", "--location",

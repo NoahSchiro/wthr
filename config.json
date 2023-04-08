@@ -1,0 +1,15 @@
+{
+    "locations": {
+        "NewYork": {
+            "address": "New York, New York, US",
+            "lat": 40.7128,
+            "lon": -74.006
+        },
+        "LockHaven": {
+            "address": "Lock Haven, Pennsylvania, US",
+            "lat": 41.137,
+            "lon": -77.4469
+        }
+    },
+    "preferredSystem": "metric"
+}

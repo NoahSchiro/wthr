@@ -2,11 +2,10 @@ class Forecast():
 
     def __init__(self, location, json, preferredUnit, args):
 
-        self.verbose = args.verbose
         self.forecast = args.forecast
         self.location = location
         self.raw = json
-        self.preferredUnit = preferredUnit
+        self.preferredMeasurements = preferredUnit
 
         self.time_slices = []
 
@@ -28,7 +27,7 @@ class Forecast():
             tempUnit = period["temperatureUnit"]
 
             # Wind speed and direction
-            windSpeed = period["windSpeed"].replace(" ", "")
+            windSpeed = period["windSpeed"].split(" ")[0]
             windDirection = period["windDirection"]
 
             # Probability of precipitation
@@ -40,10 +39,10 @@ class Forecast():
             obj = {
                 "startDate": startDate,
                 "startTime": startTime,
-                "temp": temp,
+                "temp": self._get_temp(temp),
                 "tempUnit": tempUnit,
-                "windSpeed": windSpeed,
-                "windDirection": windDirection,
+                "windSpeed": self._get_speed(windSpeed),
+                "windDirection": self._get_direction(windDirection),
                 "prob": prob,
                 "shortProse": shortProse 
             }
@@ -52,10 +51,22 @@ class Forecast():
 
     def _get_temp(self, temp_value):
 
-        if self.preferredUnit == "F":
-            return temp_value
+        # Unicode for degree symbol
+        degree_sym = "\u00B0"
+
+        if self.preferredMeasurements == "imperial":
+            return str(temp_value) + degree_sym +  "F"
         else:
-            return (temp_value - 32) * (5/9)
+            value = f"{(temp_value - 32) * (5/9):.1f}"
+            return value + degree_sym +  "C"
+        
+    def _get_speed(self, speed):
+
+        if self.preferredMeasurements == "imperial":
+            return speed + "mph"
+        else:
+            value = f"{float(speed) * 1.6093:.1f}"
+            return value + "kmh"
         
     def _get_direction(self, direction):
 
@@ -80,29 +91,19 @@ class Forecast():
             
     def print_slice(self):
 
-        # Unicode for degree symbol
-        degree_sym = "\u00B0"
-
-        # Print verbose information about the weather
-        if self.verbose:
-            s = "Verbosity not yet implemented"
-
         # Print information about the future
-        elif self.forecast:
+        if self.forecast:
 
             for i in range(12):
 
                 # Get slice
                 slice = self.time_slices[i]
-
-                # Determine temp
-                temp = self._get_temp(slice["temp"])
-
+                
                 s = f"""
 {slice["startDate"]}, {slice["startTime"]}:
-    Temperature:      {temp:.1f}{degree_sym}{self.preferredUnit}
+    Temperature:      {slice["temp"]}
     Precipitation %:  {slice["prob"]}%
-    Windspeed:        {slice["windSpeed"]} {self._get_direction(slice["windDirection"])}"""
+    Windspeed:        {slice["windSpeed"]} {slice["windDirection"]}"""
 
                 print(s)
 
@@ -112,13 +113,11 @@ class Forecast():
             # Get the most current slice
             slice = self.time_slices[0]
 
-            # Determine what unit to print
-            temp = self._get_temp(slice["temp"])
-
             s = f"""
 {slice["startDate"]}, {slice["startTime"]}:
-    Temperature:      {temp:.1f}{degree_sym}{self.preferredUnit}
+    {slice["shortProse"]}
+    Temperature:      {slice["temp"]}
     Precipitation %:  {slice["prob"]}%
-    Windspeed:        {slice["windSpeed"]} {self._get_direction(slice["windDirection"])}"""
+    Windspeed:        {slice["windSpeed"]} {slice["windDirection"]}"""
 
             print(s)
