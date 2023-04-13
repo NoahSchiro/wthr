@@ -23,7 +23,7 @@ def pretty(j):
 def main(args):
 
     # Load in configurations
-    config = json.load(open("config.json"))
+    config = json.load(open("/usr/local/wthr/config.json"))
     preferredSystem = config["preferredSystem"]
 
     lat, lon = None, None
@@ -48,7 +48,7 @@ def main(args):
         config["locations"][locationName]["address"] = address
         config["locations"][locationName]["lat"] = lat
         config["locations"][locationName]["lon"] = lon
-        json.dump(config, open("config.json", "w"), indent=4)
+        json.dump(config, open("/usr/local/wthr/config.json", "w"), indent=4)
 
     
     # First request is going to determine what weather station we need to query
