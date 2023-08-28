@@ -28,7 +28,3 @@ Fetch the weather of a city that you have saved before
 python3 main.py -l NewYork
 ```
 
-
-### Next steps for the project
-
-I plan to add a install.sh script for installing so that this can be run from anywhere in the terminal
